@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Nid (base arrondie) -->
+  <path d="M30 130 Q100 95 170 130" stroke="#92400e" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M40 145 Q100 108 160 145" stroke="#b45309" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M52 158 Q100 124 148 158" stroke="#d97706" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+  <!-- Maison (toit) -->
+  <polygon points="100,42 60,82 140,82" fill="#1c1917"/>
+  <!-- Maison (corps) -->
+  <rect x="68" y="82" width="64" height="46" rx="4" fill="#292524"/>
+  <!-- Porte -->
+  <rect x="88" y="100" width="24" height="28" rx="4" fill="#d97706"/>
+  <!-- Fenêtre gauche -->
+  <rect x="72" y="88" width="12" height="10" rx="2" fill="#fef3c7"/>
+  <!-- Fenêtre droite -->
+  <rect x="116" y="88" width="12" height="10" rx="2" fill="#fef3c7"/>
+
+  <!-- Petits oeufs dans le nid -->
+  <ellipse cx="82" cy="136" rx="9" ry="7" fill="#fbbf24" opacity="0.9"/>
+  <ellipse cx="100" cy="132" rx="9" ry="7" fill="#f59e0b" opacity="0.9"/>
+  <ellipse cx="118" cy="136" rx="9" ry="7" fill="#fbbf24" opacity="0.9"/>
+</svg>

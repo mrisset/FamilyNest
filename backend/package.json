@@ -1,0 +1,35 @@
+{
+  "name": "familynest-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate-fk": "tsx src/db/migrate-fk.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^9.3.1",
+    "@fastify/cors": "^9.0.1",
+    "@fastify/jwt": "^8.0.1",
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/websocket": "^8.3.1",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.8",
+    "fastify": "^4.26.0",
+    "nanoid": "^5.0.7",
+    "nodemailer": "^8.0.5",
+    "postgres": "^3.4.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.12.7",
+    "@types/nodemailer": "^8.0.0",
+    "drizzle-kit": "^0.21.1",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}
