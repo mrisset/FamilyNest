@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/auth';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -9,6 +10,7 @@ import ProfilePage from './pages/ProfilePage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
+  useInactivityLogout();
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 

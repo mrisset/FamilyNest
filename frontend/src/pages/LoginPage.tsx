@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/auth';
 import FormError from '../components/ui/FormError';
@@ -8,6 +9,7 @@ import Logo from '../components/Logo';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setAuth } = useAuthStore();
@@ -59,15 +61,25 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="text-xs font-medium text-stone-600 dark:text-stone-300 mb-1 block">Mot de passe</label>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError(null); }}
-              onKeyDown={e => e.key === 'Enter' && submit()}
-              placeholder="••••••••"
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <input
+                className="input pr-10"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(null); }}
+                onKeyDown={e => e.key === 'Enter' && submit()}
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <FormError message={error} />
           <button

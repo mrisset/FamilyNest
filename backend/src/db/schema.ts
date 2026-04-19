@@ -21,6 +21,7 @@ export const sessions = pgTable('sessions', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   tokenHash: text('token_hash').notNull().unique(),
   expiresAt: timestamp('expires_at').notNull(),
+  lastUsedAt: timestamp('last_used_at').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (t) => ({ userIdx: index('sessions_user_idx').on(t.userId) }));
 
@@ -89,26 +90,12 @@ export const reservations = pgTable('reservations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (t) => ({ houseIdx: index('reservations_house_idx').on(t.houseId) }));
 
-// ─── Documents ────────────────────────────────────────────────────────────────
-
-export const documents = pgTable('documents', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  houseId: uuid('house_id').references(() => houses.id, { onDelete: 'cascade' }).notNull(),
-  uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
-  filename: text('filename').notNull(),       // nom original affiché
-  storedName: text('stored_name').notNull(),  // nom sur disque (uuid)
-  mimeType: text('mime_type').notNull(),
-  sizeBytes: integer('size_bytes').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (t) => ({ houseIdx: index('documents_house_idx').on(t.houseId) }));
-
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
   houseMembers: many(houseMembers),
   messages: many(messages),
   reservations: many(reservations),
-  documents: many(documents),
 }));
 
 export const housesRelations = relations(houses, ({ many }) => ({
@@ -116,7 +103,6 @@ export const housesRelations = relations(houses, ({ many }) => ({
   channels: many(channels),
   reservations: many(reservations),
   invitations: many(invitations),
-  documents: many(documents),
 }));
 
 export const houseMembersRelations = relations(houseMembers, ({ one }) => ({
@@ -140,7 +126,3 @@ export const reservationsRelations = relations(reservations, ({ one }) => ({
   reviewedByUser: one(users, { fields: [reservations.reviewedBy], references: [users.id] }),
 }));
 
-export const documentsRelations = relations(documents, ({ one }) => ({
-  house: one(houses, { fields: [documents.houseId], references: [houses.id] }),
-  uploadedByUser: one(users, { fields: [documents.uploadedBy], references: [users.id] }),
-}));

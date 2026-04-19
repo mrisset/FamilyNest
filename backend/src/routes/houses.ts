@@ -3,7 +3,6 @@ import { db } from '../db/index.js';
 import { houses, houseMembers, invitations, channels } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { authenticate } from '../middleware/auth.js';
-import { sendInvitationEmail } from '../utils/mailer.js';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
@@ -171,10 +170,8 @@ export async function housesRoutes(app: FastifyInstance) {
 
     const body = z.object({
       role: z.enum(['admin', 'member']).default('member'),
-      email: z.string().email().optional(),
     }).safeParse(req.body);
     const rawRole = body.success ? body.data.role : 'member';
-    const email = body.success ? body.data.email : undefined;
     // Un admin ne peut inviter qu'en tant que membre
     const role = member.role === 'admin' ? 'member' : rawRole;
 
@@ -183,17 +180,6 @@ export async function housesRoutes(app: FastifyInstance) {
     const [inv] = await db.insert(invitations).values({
       houseId: id, invitedBy: req.user.id, token, role, expiresAt,
     }).returning();
-
-    if (email) {
-      const house = await db.query.houses.findFirst({ where: eq(houses.id, id) });
-      const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
-      await sendInvitationEmail({
-        to: email,
-        houseName: house?.name ?? 'une maison',
-        invitedBy: req.user.displayName,
-        link: `${frontendUrl}/join/${token}`,
-      }).catch(err => console.error('Erreur envoi email invitation:', err));
-    }
 
     return { token: inv.token, role: inv.role, expiresAt: inv.expiresAt };
   });

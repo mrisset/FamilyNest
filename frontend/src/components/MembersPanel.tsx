@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import type { HouseDetail } from '../lib/api';
-import { Crown, Users, Link2, Copy, UserMinus, Shield, ShieldOff, LogOut, KeyRound } from 'lucide-react';
+import { Crown, Users, Link2, Copy, UserMinus, Shield, ShieldOff, LogOut, KeyRound, Mail, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/auth';
 import { useNavigate } from 'react-router-dom';
@@ -18,21 +18,34 @@ export default function MembersPanel({ house }: Props) {
   const qc = useQueryClient();
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteRole, setInviteRole] = useState<'member' | 'admin'>('member');
-  const [inviteEmail, setInviteEmail] = useState('');
   const [confirmLeave, setConfirmLeave] = useState(false);
 
   const inviteMutation = useMutation({
-    mutationFn: () => api.post(`/houses/${house.id}/invite`, {
-      role: inviteRole,
-      ...(inviteEmail.trim() ? { email: inviteEmail.trim() } : {}),
-    }).then(r => r.data),
+    mutationFn: () => api.post(`/houses/${house.id}/invite`, { role: inviteRole }).then(r => r.data),
     onSuccess: (data) => {
       const link = `${window.location.origin}/join/${data.token}`;
       setInviteLink(link);
-      if (inviteEmail.trim()) toast.success(`Invitation envoyée à ${inviteEmail.trim()}`);
     },
     onError: (e: any) => toast.error(e.response?.data?.error ?? 'Erreur'),
   });
+
+  const shareByEmail = () => {
+    if (!inviteLink) return;
+    const subject = encodeURIComponent(`Invitation à rejoindre "${house.name}" sur FamilyNest`);
+    const body = encodeURIComponent(
+      `Bonjour,\n\nTu es invité(e) à rejoindre la maison "${house.name}" sur FamilyNest.\n\nClique sur ce lien pour accepter l'invitation :\n${inviteLink}\n\nLe lien expire dans 7 jours.`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  const shareNative = async () => {
+    if (!inviteLink) return;
+    await navigator.share({
+      title: `Rejoins "${house.name}" sur FamilyNest`,
+      text: `Tu es invité(e) à rejoindre la maison "${house.name}" sur FamilyNest.`,
+      url: inviteLink,
+    });
+  };
 
   const kickMutation = useMutation({
     mutationFn: (userId: string) => api.delete(`/houses/${house.id}/members/${userId}`),
@@ -84,14 +97,7 @@ export default function MembersPanel({ house }: Props) {
         {isAdmin && (
           <div className="card p-4">
             <p className="text-sm font-medium text-stone-800 dark:text-stone-100 mb-1">Inviter quelqu'un</p>
-            <p className="text-xs text-stone-500 dark:text-stone-400 mb-3">Lien valable 7 jours, usage unique.</p>
-            <input
-              type="email"
-              className="input text-sm mb-2"
-              placeholder="Adresse e-mail (optionnel)"
-              value={inviteEmail}
-              onChange={e => { setInviteEmail(e.target.value); setInviteLink(null); }}
-            />
+            <p className="text-xs text-stone-500 dark:text-stone-400 mb-3">Génère un lien valable 7 jours, à partager comme tu veux.</p>
             <div className="flex items-center gap-2">
               <select
                 value={inviteRole}
@@ -108,11 +114,26 @@ export default function MembersPanel({ house }: Props) {
               </button>
             </div>
             {inviteLink && (
-              <div className="mt-3 flex items-center gap-2 bg-stone-50 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-xl px-3 py-2">
-                <span className="text-xs text-stone-600 dark:text-stone-300 truncate flex-1 font-mono">{inviteLink}</span>
-                <button onClick={copyLink} className="text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 transition-colors flex-shrink-0">
-                  <Copy size={14} />
-                </button>
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center gap-2 bg-stone-50 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-xl px-3 py-2">
+                  <span className="text-xs text-stone-600 dark:text-stone-300 truncate flex-1 font-mono">{inviteLink}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button onClick={copyLink}
+                    className="btn-secondary flex items-center gap-1.5 text-xs">
+                    <Copy size={12} /> Copier le lien
+                  </button>
+                  <button onClick={shareByEmail}
+                    className="btn-secondary flex items-center gap-1.5 text-xs">
+                    <Mail size={12} /> Envoyer par e-mail
+                  </button>
+                  {typeof navigator.share === 'function' && (
+                    <button onClick={shareNative}
+                      className="btn-secondary flex items-center gap-1.5 text-xs">
+                      <Share2 size={12} /> Partager…
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

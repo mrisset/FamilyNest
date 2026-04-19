@@ -41,13 +41,22 @@ export default function ChatPanel({ channel }: Props) {
     if (!token) return;
     setWsStatus('connecting');
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${proto}://${window.location.host}/ws/channels/${channel.id}?token=${token}`);
+    // Le token n'est plus dans l'URL — il est envoyé dans le premier message
+    const ws = new WebSocket(`${proto}://${window.location.host}/ws/channels/${channel.id}`);
     wsRef.current = ws;
-    ws.onopen = () => setWsStatus('connected');
+    ws.onopen = () => {
+      // Authentification par premier message (token hors URL)
+      ws.send(JSON.stringify({ type: 'auth', token }));
+    };
     ws.onmessage = (e) => {
       try {
-        const msg: Message = JSON.parse(e.data);
-        setLiveMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+        const data = JSON.parse(e.data);
+        if (data.type === 'auth_ok') { setWsStatus('connected'); return; }
+        if (data.type === 'error') { console.warn('[WS]', data.message); return; }
+        if (data.type === 'message') {
+          const msg: Message = data;
+          setLiveMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
+        }
       } catch (_) {}
     };
     ws.onclose = () => {
@@ -193,11 +202,10 @@ export default function ChatPanel({ channel }: Props) {
         <div className="flex gap-2 items-center">
           <input
             className="input flex-1"
-            placeholder={wsStatus === 'connected' ? `Message dans #${channel.name}…` : 'Reconnexion en cours…'}
+            placeholder={`Message dans #${channel.name}…`}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
-            disabled={wsStatus !== 'connected'}
           />
           <button
             onClick={send}

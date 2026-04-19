@@ -20,7 +20,9 @@ const loginSchema = z.object({
 
 export async function authRoutes(app: FastifyInstance) {
   // POST /auth/register
-  app.post('/auth/register', async (req, reply) => {
+  app.post('/auth/register', {
+    config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
+  }, async (req, reply) => {
     const body = registerSchema.safeParse(req.body);
     if (!body.success) return reply.code(400).send({ error: body.error.flatten() });
 
@@ -45,7 +47,9 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // POST /auth/login
-  app.post('/auth/login', async (req, reply) => {
+  app.post('/auth/login', {
+    config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+  }, async (req, reply) => {
     const body = loginSchema.safeParse(req.body);
     if (!body.success) return reply.code(400).send({ error: 'Données invalides' });
 

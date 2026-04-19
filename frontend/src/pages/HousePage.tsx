@@ -11,6 +11,7 @@ import { ArrowLeft, Plus, Hash, CalendarDays, Users, X, Settings, Pencil, Trash2
 import { useAuthStore } from '../store/auth';
 import { useThemeStore } from '../store/theme';
 import RichEditor from '../components/RichEditor';
+import InfoPanel from '../components/InfoPanel';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 
@@ -102,7 +103,7 @@ export default function HousePage() {
   const flags: ChannelFlag[] = ['discussion', 'problem', 'maintenance', 'announcement', 'other'];
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-900 flex flex-col">
+    <div className="h-screen bg-stone-50 dark:bg-stone-900 flex flex-col overflow-hidden">
       {/* Top bar */}
       <header className="bg-white dark:bg-stone-800 border-b border-stone-200 dark:border-stone-700 px-4 py-3 flex items-center gap-3 flex-shrink-0">
         {/* Gauche : retour + nom de la maison */}
@@ -302,25 +303,10 @@ export default function HousePage() {
           {activeTab === 'reservations' && <ReservationsPanel house={house} />}
           {activeTab === 'members' && <MembersPanel house={house} />}
           {activeTab === 'info' && (
-            <div className="flex-1 overflow-y-auto p-6">
-              {(house as any).richDescription ? (
-                <RichEditor
-                  content={(house as any).richDescription}
-                  onChange={() => {}}
-                  editable={false}
-                />
-              ) : (
-                <div className="text-center py-16 text-stone-400 dark:text-stone-500 text-sm">
-                  <Info size={32} className="mx-auto mb-2 opacity-30" />
-                  <p>Aucune description détaillée</p>
-                  {house.myRole === 'admin' || house.myRole === 'owner' && (
-                    <p className="text-xs mt-1 text-stone-300 dark:text-stone-600">
-                      Ajoutez-en une via le bouton ⚙ en haut
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+            <InfoPanel
+              richDescription={(house as any).richDescription ?? null}
+              canEdit={house.myRole === 'admin' || house.myRole === 'owner'}
+            />
           )}
         </main>
       </div>

@@ -1,8 +1,13 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db/index.js';
 import { sessions, users } from '../db/schema.js';
-import { eq, gt } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { createHash } from 'crypto';
+
+// Déconnexion après 7 jours d'inactivité (aucune requête API)
+const INACTIVITY_LIMIT_MS = 7 * 24 * 60 * 60 * 1000;
+// On met à jour lastUsedAt au maximum toutes les 5 minutes (évite les écritures inutiles)
+const REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
 
 export async function authenticate(request: FastifyRequest, reply: FastifyReply) {
   const authHeader = request.headers.authorization;
@@ -22,6 +27,21 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
 
   if (!session || session.session.expiresAt < new Date()) {
     return reply.code(401).send({ error: 'Session expirée ou invalide' });
+  }
+
+  const lastUsed = session.session.lastUsedAt;
+  if (Date.now() - lastUsed.getTime() > INACTIVITY_LIMIT_MS) {
+    await db.delete(sessions).where(eq(sessions.id, session.session.id));
+    return reply.code(401).send({ error: 'Session expirée pour inactivité' });
+  }
+
+  // Mise à jour lastUsedAt en arrière-plan (throttlée)
+  if (Date.now() - lastUsed.getTime() > REFRESH_THRESHOLD_MS) {
+    db.update(sessions)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(sessions.id, session.session.id))
+      .execute()
+      .catch(() => {});
   }
 
   request.user = {

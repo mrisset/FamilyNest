@@ -1,2 +1,13 @@
 backend/node_modules/
 frontend/node_modules/
+
+# Variables d'environnement — ne jamais committer
+backend/.env
+.env
+
+# Fichiers de build
+frontend/dist/
+backend/dist/
+
+# Uploads (données utilisateurs)
+backend/uploads/
